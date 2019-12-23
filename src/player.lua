@@ -1,10 +1,11 @@
+local utils = require("lib/utils")
+
 local G = love.graphics
 local K = love.keyboard
 local M = love.mouse
 
-local utils = require("lib/utils")
-
-local player = {
+player = {
+  bullets = require("src/bullets"),
   speed = 180,
   sprite = G.newImage("assets/sprites/player.png"),
   x = G.getWidth() / 2,
@@ -30,6 +31,15 @@ function player:setY(y)
   self.y = y
 end
 
+function player:getPosition()
+  return {x = self.x, y = self.y}
+end
+
+function player:resetPosition()
+  self:setX(love.graphics.getWidth() / 2)
+  self:setY(love.graphics.getHeight() / 2)
+end
+
 function player:getDirection()
   return math.atan2(player.y - M.getY(), player.x - M.getX()) + math.rad(180)
 end
@@ -49,4 +59,6 @@ function player:move(dt)
   if K.isDown("d") and isOnScreen(self, "right") then moveRight() end
 end
 
-return player
+function player:shoot()
+  bullets:spawn(nil, self)
+end

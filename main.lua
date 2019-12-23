@@ -1,17 +1,12 @@
 function love.load()
   sprites = {
-    player = love.graphics.newImage("sprites/player.png"),
-    zombie = love.graphics.newImage("sprites/zombie.png"),
-    bullet = love.graphics.newImage("sprites/bullet.png"),
-    background = love.graphics.newImage("sprites/background.png"),
+    player = love.graphics.newImage("assets/sprites/player.png"),
+    zombie = love.graphics.newImage("assets/sprites/zombie.png"),
+    bullet = love.graphics.newImage("assets/sprites/bullet.png"),
+    background = love.graphics.newImage("assets/sprites/bg.png"),
   }
 
-  player = {
-    x = love.graphics.getWidth() / 2,
-    y = love.graphics.getHeight() / 2,
-    speed = 180
-  }
-
+  player = require("src/player")
   zombies = {}
   bullets = {}
 
@@ -25,27 +20,15 @@ end
 
 function love.update(dt)
   if gameState == 2 then
-    if love.keyboard.isDown("s") and player.y < love.graphics.getHeight() then
-      player.y = player.y + player.speed * dt
-    end
-
-    if love.keyboard.isDown("w") and player.y > 0 then
-      player.y = player.y - player.speed * dt
-    end
-
-    if love.keyboard.isDown("a") and player.x > 0 then
-      player.x = player.x - player.speed * dt
-    end
-
-    if love.keyboard.isDown("d") and player.x < love.graphics.getWidth() then
-      player.x = player.x + player.speed * dt
-    end
+    player:update(dt)
   end
 
   for _i, zombie in ipairs(zombies) do
+    -- Zombies movement
     zombie.x = zombie.x + math.cos(zombiePlayerAngle(zombie)) * zombie.speed * dt
     zombie.y = zombie.y + math.sin(zombiePlayerAngle(zombie)) * zombie.speed * dt
 
+    -- Zombie and player collision (game over)
     if distanceBetween({ x = player.x, y = player.y}, {x = zombie.x, y = zombie.y}) < 30 then
       for i, z in ipairs(zombies) do
         zombies[i] = nil
@@ -59,11 +42,13 @@ function love.update(dt)
     end
   end
 
+  -- Bullet movement
   for _i, bullet in ipairs(bullets) do
     bullet.x = bullet.x + math.cos(bullet.direction) * bullet.speed * dt
     bullet.y = bullet.y + math.sin(bullet.direction) * bullet.speed * dt
   end
 
+  -- Remove bullets that are off screen
   for i=#bullets, 1, -1 do
     b = bullets[i]
 
@@ -72,6 +57,7 @@ function love.update(dt)
     end
   end
 
+  -- Bullet and zombie collision
   for _i, zombie in ipairs(zombies) do
     for _j, bullet in ipairs(bullets) do
       if distanceBetween({x = zombie.x, y = zombie.y}, {x = bullet.x, y = bullet.y}) <= 20 then
@@ -82,18 +68,21 @@ function love.update(dt)
     end
   end
 
+  -- Remove zombies hit by bullet
   for i=#zombies, 1, -1 do
     if zombies[i].isDead then
       table.remove(zombies, i)
     end
   end
 
+  -- Remove bullets that hit zombies
   for i=#bullets, 1, -1 do
     if bullets[i].isDead then
       table.remove(bullets, i)
     end
   end
 
+  -- Game started playing
   if gameState == 2 then
     timer = timer - dt
 
@@ -115,10 +104,7 @@ function love.draw()
 
   love.graphics.printf("Score: " .. score, 0, love.graphics.getHeight() - 100, love.graphics.getWidth(), "center")
 
-  love.graphics.draw(
-    sprites.player, player.x, player.y, playerMouseAngle(),
-    nil, nil, sprites.player:getWidth() / 2, sprites.player:getHeight() / 2
-  )
+  player:draw()
 
   for _i, zombie in ipairs(zombies) do
     love.graphics.draw(
@@ -133,10 +119,6 @@ function love.draw()
       0.5, 0.5, sprites.bullet:getWidth() / 2, sprites.bullet:getHeight() / 2
     )
   end
-end
-
-function playerMouseAngle()
-  return math.atan2(player.y - love.mouse.getY(), player.x - love.mouse.getX()) + math.rad(180)
 end
 
 function zombiePlayerAngle(enemy)
@@ -175,17 +157,11 @@ function spawnBullet()
     x = player.x,
     y = player.y,
     speed = 500,
-    direction = playerMouseAngle(),
+    direction = player:getDirection(),
     isDead = false
   }
 
   table.insert(bullets, bullet)
-end
-
-function love.keypressed(key, scanCode, isRepeat)
-  if key == "space" then
-    spawnZombie()
-  end
 end
 
 function isOffScreen(element)
@@ -193,7 +169,6 @@ function isOffScreen(element)
 end
 
 function love.mousepressed(x, y, btnCode, isTouch)
-
   if gameState == 1 then
     gameState = 2
     maxTime = 2

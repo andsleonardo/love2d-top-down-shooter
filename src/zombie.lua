@@ -1,3 +1,5 @@
+require("lib/table")
+
 local G = love.graphics
 
 local Zombie = function(x, y, speed)

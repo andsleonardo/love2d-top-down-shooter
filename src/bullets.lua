@@ -1,3 +1,5 @@
+require("lib/table")
+
 local utils = require("lib/utils")
 local Bullet = require("src/bullet")
 
@@ -15,12 +17,12 @@ function bullets:update(dt)
       if not bullet.isAlive then table.remove(self, i) end
     end
 
-  utils.each(self, function(bullet) bullet:update(dt) end)
-  utils.reverseEach(self, removeDeadBullet)
+  table.each(self, function(bullet) bullet:update(dt) end)
+  table.reverseEach(self, removeDeadBullet)
 end
 
 function bullets:draw()
-  utils.each(self, function(bullet) bullet:draw() end)
+  table.each(self, function(bullet) bullet:draw() end)
 end
 
 function bullets:spawn(speed, player)

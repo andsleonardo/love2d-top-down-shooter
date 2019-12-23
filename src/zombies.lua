@@ -1,3 +1,5 @@
+require("lib/table")
+
 local utils = require("lib/utils")
 local Zombie = require("src/zombie")
 
@@ -18,7 +20,7 @@ function zombies:update(dt)
     zombie:move(dt)
 
     if zombie:hasGotPlayer() then
-      utils.map(self, function(zombie) zombie.isAlive = false end)
+      table.map(self, function(zombie) zombie.isAlive = false end)
 
       score = 0
       gameState = 1
@@ -27,11 +29,11 @@ function zombies:update(dt)
     end
   end
 
-  utils.reverseEach(self, removeDeadZombie)
+  table.reverseEach(self, removeDeadZombie)
 end
 
 function zombies:draw()
-  utils.each(self, function(zombie) zombie:draw() end)
+  table.each(self, function(zombie) zombie:draw() end)
 end
 
 function zombies:spawn(speed)
@@ -43,7 +45,7 @@ function zombies:spawn(speed)
   }
 
   local getRandomSide = function()
-    local positions = utils.values(spawnPositions)
+    local positions = table.values(spawnPositions)
     return positions[math.random(1, #positions)]
   end
 

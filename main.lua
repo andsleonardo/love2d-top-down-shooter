@@ -1,3 +1,4 @@
+require("lib/table")
 require("src/player")
 require("src/zombies")
 

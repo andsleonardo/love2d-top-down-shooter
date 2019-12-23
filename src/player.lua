@@ -1,3 +1,5 @@
+require("lib/table")
+
 local utils = require("lib/utils")
 
 local G = love.graphics

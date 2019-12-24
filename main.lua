@@ -1,63 +1,34 @@
 require("lib/table")
+require("src/game")
 require("src/player")
 require("src/zombies")
 
-gameState = 1
-score = 0
+local G = love.graphics
+local collisions = require("src/collisions")
 
 function love.load()
-  sprites = {
-    background = love.graphics.newImage("assets/sprites/bg.png"),
-  }
-
-  maxTime = 2
-  timer = maxTime
-
-  myFont = love.graphics.newFont(40)
-  score = 0
+  game:load()
 end
 
 function love.update(dt)
-  if gameState == 1 then
-  elseif gameState == 2 then
+  if game:isMenu() then
+  elseif game:isPlaying() then
     player:update(dt)
     player.bullets:update(dt)
     zombies:update(dt)
-  end
 
-  -- Bullet and zombie collision
-  for _i, zombie in ipairs(zombies) do
-    for _j, bullet in ipairs(player.bullets) do
-      if distanceBetween(zombie:getPosition(), bullet:getPosition()) <= 20 then
-        zombie.isAlive = false
-        bullet.isAlive = false
-        score = score + 1
-      end
-    end
-  end
-
-  -- Game started playing
-  if gameState == 2 then
-    timer = timer - dt
-
-    if timer <= 0 then
-      zombies:spawn()
-      -- spawnZombie()
-      maxTime = maxTime * 0.95
-      timer = maxTime
-    end
+    collisions:betweenZombiesAndBullets()
   end
 end
 
 function love.draw()
-  love.graphics.draw(sprites.background, 0, 0)
+  game:draw()
 
-  if gameState == 1 then
-    love.graphics.setFont(myFont)
-    love.graphics.printf("Click anywhere to begin", 0, 50, love.graphics.getWidth(), "center")
+  if game:isMenu() then
+    G.printf("Click anywhere to begin", 0, 50, G.getWidth(), "center")
   end
 
-  love.graphics.printf("Score: " .. score, 0, love.graphics.getHeight() - 100, love.graphics.getWidth(), "center")
+  G.printf("Score: " .. game.score, 0, G.getHeight() - 100, G.getWidth(), "center")
 
   player:draw()
   player.bullets:draw()
@@ -65,17 +36,15 @@ function love.draw()
 end
 
 function love.mousepressed(x, y, btnCode, isTouch)
-  if gameState == 1 then
-    gameState = 2
-    maxTime = 2
-    timer = maxTime
-  elseif gameState == 2 then
-    if btnCode == 1 then
-      player.bullets:spawn()
-    end
-  end
-end
+  if game:isMenu() then
+    if not btnCode == 2 then return end
 
-function distanceBetween(p1, p2)
-  return math.sqrt((p1.x - p2.x) ^ 2 + (p1.y - p2.y) ^ 2)
+    game:startPlaying()
+    zombies:resetSpawnCountdown()
+
+  elseif game:isPlaying() then
+    if not btnCode == 1 then return end
+
+    player.bullets:spawn()
+  end
 end
